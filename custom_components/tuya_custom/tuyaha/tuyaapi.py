@@ -260,9 +260,7 @@ class TuyaApi:
                 devId,
             )
             return
-
         response_json = response.json()
-        _LOGGER.debug("Tuya request response: %s", response_json)
         result_code = response_json["header"]["code"]
         if result_code != "SUCCESS":
             if result_code == "FrequentlyInvoke":
