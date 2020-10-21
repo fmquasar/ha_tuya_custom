@@ -38,6 +38,15 @@ from .const import (
     TUYA_DEVICES_CONF,
     TUYA_DISCOVERY_NEW,
     TUYA_PLATFORMS,
+    CONF_MAX_KELVIN,
+    CONF_MIN_KELVIN,
+    CONF_COUNTRYCODE,
+    CONF_CURR_TEMP_DIVIDER,
+    CONF_EXT_TEMP_SENSOR,
+    CONF_DEVICE_NAME,
+    CONF_SUPPORT_COLOR,
+    CONF_TEMP_DIVIDER,
+    CONF_BRIGHTNESS_RANGE_MODE
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,18 +68,38 @@ TUYA_TYPE_TO_HA = {
 
 TUYA_TRACKER = "tuya_tracker"
 
+TUYA_DEVICE_CONF_SCHEMA = {
+    vol.Optional(TUYA_DEVICES_CONF): vol.All(
+        cv.ensure_list,
+        [
+            vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE_NAME): cv.string,
+                    vol.Optional(CONF_TEMP_DIVIDER, default=0): cv.positive_int,
+                    vol.Optional(CONF_CURR_TEMP_DIVIDER, default=0): cv.positive_int,
+                    vol.Optional(CONF_EXT_TEMP_SENSOR): cv.string,
+                    vol.Optional(CONF_SUPPORT_COLOR): cv.boolean,
+                    vol.Optional(CONF_BRIGHTNESS_RANGE_MODE, default=0): cv.positive_int,
+                    vol.Optional(CONF_MIN_KELVIN): cv.positive_int,
+                    vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
+                }
+            )
+        ],
+    )
+}
+
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
         cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_COUNTRYCODE): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_USERNAME): cv.string,
+                    vol.Optional(CONF_COUNTRYCODE): cv.string,
+                    vol.Optional(CONF_PASSWORD): cv.string,
                     vol.Optional(CONF_PLATFORM, default="tuya"): cv.string,
                 }
-            )
+            ).extend(TUYA_DEVICE_CONF_SCHEMA)
         },
     ),
     extra=vol.ALLOW_EXTRA,

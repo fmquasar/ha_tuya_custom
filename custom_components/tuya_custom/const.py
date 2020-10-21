@@ -1,5 +1,5 @@
 """Constants for the Tuya integration."""
-
+CONF_DEVICE_NAME = "device_name"
 CONF_BRIGHTNESS_RANGE_MODE = "brightness_range_mode"
 CONF_COUNTRYCODE = "country_code"
 CONF_CURR_TEMP_DIVIDER = "curr_temp_divider"
