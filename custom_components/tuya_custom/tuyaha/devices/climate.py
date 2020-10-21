@@ -139,10 +139,10 @@ class TuyaClimate(TuyaDevice):
         return None
 
     def min_temp(self):
-        return self._set_decimal(self.data.get("min_temper"))
+        return self.data.get("min_temper")
 
     def max_temp(self):
-        return self._set_decimal(self.data.get("max_temper"))
+        return self.data.get("max_temper")
 
     def min_humidity(self):
         pass
@@ -156,9 +156,9 @@ class TuyaClimate(TuyaDevice):
         # the value used to set temperature is scaled based on the configured divider
         divider = self._divider or 1
 
-        if not self.has_decimal():
-            temp_val = round(float(temperature))
-            set_val = temp_val * divider
+        if divider != 10:
+            temp_val = float(temperature)
+            set_val = round(temp_val * divider)
         else:
             temp_val = set_val = round(float(temperature) * divider)
         if self._control_device("temperatureSet", {"value": temp_val}):

@@ -90,7 +90,6 @@ TUYA_DEVICE_CONF_SCHEMA = {
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
                 {
@@ -133,13 +132,24 @@ def _update_query_interval(hass, interval):
 async def async_setup(hass, config):
     """Set up the Tuya integration."""
 
+    hass.data[DOMAIN] = {
+        TUYA_DEVICES_CONF: {}
+    }
     conf = config.get(DOMAIN)
     if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        devices_config = conf.get(TUYA_DEVICES_CONF)
+        if devices_config:
+            hass.data[DOMAIN][TUYA_DEVICES_CONF] = devices_config
+
+        user = conf.get(CONF_USERNAME)
+        pwd = conf.get(CONF_PASSWORD)
+        country = conf.get(CONF_COUNTRYCODE)
+        if user and pwd and country:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+                )
             )
-        )
 
     return True
 
@@ -171,17 +181,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         return False
 
-    hass.data[DOMAIN] = {
+    hass.data.setdefault(DOMAIN, {}).update({
         TUYA_DATA: tuya,
-        TUYA_DEVICES_CONF: entry.options.copy(),
         TUYA_TRACKER: None,
         ENTRY_IS_SETUP: set(),
         "entities": {},
         "pending": {},
-        entry.entry_id: {
+        entry.entry_id:
+        {
             "listener": [entry.add_update_listener(update_listener)],
-        },
-    }
+        }
+    })
 
     _update_discovery_interval(
         hass, entry.options.get(CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL)
@@ -288,7 +298,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Update when config_entry options update."""
-    hass.data[DOMAIN][TUYA_DEVICES_CONF] = entry.options.copy()
+
     _update_discovery_interval(
         hass, entry.options.get(CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL)
     )
@@ -335,15 +345,17 @@ class TuyaDevice(Entity):
 
     def _get_device_config(self):
         """Get updated device options."""
-        dev_conf = {}
         devices_config = self.hass.data[DOMAIN].get(TUYA_DEVICES_CONF)
         if devices_config:
-            dev_conf = devices_config.get(self.object_id, {})
-            if dev_conf:
-                _LOGGER.debug(
-                    "Configuration for deviceID %s: %s", self.object_id, str(dev_conf)
-                )
-        return dev_conf
+            dev_id = self.object_id
+            dev_name = (self.name.lower()).replace(" ", "_")
+            for conf_info in devices_config:
+                conf_id = conf_info[CONF_DEVICE_NAME]
+                conf_name = (conf_id.lower()).replace(" ", "_")
+                if conf_name == dev_name or conf_id == dev_id:
+                    _LOGGER.debug("Configuration for device: %s", str(conf_info))
+                    return conf_info
+        return []
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
