@@ -3,6 +3,6 @@
   "name": "Tuya Custom",
   "documentation": "https://www.home-assistant.io/integrations/tuya",
   "requirements": [],
-  "codeowners": ["@ollo69"],
+  "codeowners": ["@fmquasar"],
   "config_flow": true
 }
