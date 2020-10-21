@@ -74,7 +74,7 @@ class TuyaClimate(TuyaDevice):
 
     def has_decimal(self):
         """Return if temperature values support decimal"""
-        return self._divider >= 10
+        return self._divider > 1
 
     def temperature_unit(self):
         """Return the temperature unit for the device"""
